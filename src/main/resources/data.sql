@@ -54,15 +54,3 @@ INSERT INTO conversations (id, participant_one_id, participant_two_id, updated_a
 
 INSERT INTO messages (id, conversation_id, sender_id, body, read_by_recipient, created_at) VALUES
 (1, 1, 2, 'Confirmamos la sesion de manana?', FALSE, CURRENT_TIMESTAMP);
-
-ALTER TABLE app_users ALTER COLUMN id RESTART WITH 5;
-ALTER TABLE skills ALTER COLUMN id RESTART WITH 9;
-ALTER TABLE user_skills ALTER COLUMN id RESTART WITH 12;
-ALTER TABLE exchange_requests ALTER COLUMN id RESTART WITH 3;
-ALTER TABLE learning_sessions ALTER COLUMN id RESTART WITH 3;
-ALTER TABLE schedule_proposals ALTER COLUMN id RESTART WITH 1;
-ALTER TABLE payments ALTER COLUMN id RESTART WITH 1;
-ALTER TABLE credit_transactions ALTER COLUMN id RESTART WITH 2;
-ALTER TABLE reviews ALTER COLUMN id RESTART WITH 1;
-ALTER TABLE conversations ALTER COLUMN id RESTART WITH 2;
-ALTER TABLE messages ALTER COLUMN id RESTART WITH 2;

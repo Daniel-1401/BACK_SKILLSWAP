@@ -151,7 +151,20 @@ public class UserService {
         }
         String normalized = q.toLowerCase(Locale.ROOT);
         return user.getName().toLowerCase(Locale.ROOT).contains(normalized)
-                || user.getFullName().toLowerCase(Locale.ROOT).contains(normalized);
+                || user.getFullName().toLowerCase(Locale.ROOT).contains(normalized)
+                || matchesSkillsText(user, normalized);
+    }
+
+    private boolean matchesSkillsText(AppUser user, String normalizedQuery) {
+        return userSkillRepository.findByUserId(user.getId()).stream()
+                .anyMatch(userSkill -> {
+                    String skillName = userSkill.getSkill().getName().toLowerCase(Locale.ROOT);
+                    String detail = userSkill.getDetail() == null ? "" : userSkill.getDetail().toLowerCase(Locale.ROOT);
+                    String level = userSkill.getLevel() == null ? "" : userSkill.getLevel().toLowerCase(Locale.ROOT);
+                    return skillName.contains(normalizedQuery)
+                            || detail.contains(normalizedQuery)
+                            || level.contains(normalizedQuery);
+                });
     }
 
     private boolean matchesCategory(AppUser user, Long categoryId) {
