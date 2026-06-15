@@ -3,6 +3,7 @@ package com.utp.proyecto.controllers;
 import com.utp.proyecto.dto.AuthSessionResponse;
 import com.utp.proyecto.dto.AuthUserResponse;
 import com.utp.proyecto.dto.LoginRequest;
+import com.utp.proyecto.dto.RegisterRequest;
 import com.utp.proyecto.services.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,16 @@ public class AuthController {
     @PostMapping("/login")
     public AuthSessionResponse login(@RequestBody LoginRequest request) {
         return service.login(request);
+    }
+
+    @PostMapping("/register")
+    public AuthSessionResponse register(@RequestBody RegisterRequest request) {
+        return service.register(request);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
