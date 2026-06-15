@@ -1,6 +1,3 @@
--- SkillSwap MySQL schema + seed data
--- Run with:
--- mysql -u root -p < sql/mysql/skillswap.sql
 
 CREATE DATABASE IF NOT EXISTS skillswap
   CHARACTER SET utf8mb4

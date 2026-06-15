@@ -3,7 +3,9 @@ package com.utp.proyecto.services;
 import com.utp.proyecto.dto.PagedResponse;
 import com.utp.proyecto.dto.SkillFeaturedResponse;
 import com.utp.proyecto.dto.SkillSearchResponse;
+import com.utp.proyecto.models.AppUser;
 import com.utp.proyecto.models.Skill;
+import com.utp.proyecto.repositories.AppUserRepository;
 import com.utp.proyecto.repositories.SkillRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +16,11 @@ import java.util.Locale;
 public class SkillService {
 
     private final SkillRepository repository;
+    private final AppUserRepository userRepository;
 
-    public SkillService(SkillRepository repository) {
+    public SkillService(SkillRepository repository, AppUserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
     public List<SkillFeaturedResponse> getFeaturedSkills() {
@@ -43,13 +47,25 @@ public class SkillService {
     }
 
     private SkillFeaturedResponse toFeaturedResponse(Skill skill) {
+        Long tutorId = resolveTutorId(skill.getTutor());
         return new SkillFeaturedResponse(
                 skill.getId(),
                 skill.getName(),
+                tutorId,
                 skill.getTutor(),
                 skill.getDescription(),
                 skill.getSubscriptionCost()
         );
+    }
+
+    private Long resolveTutorId(String tutorName) {
+        if (tutorName == null || tutorName.isBlank()) {
+            return null;
+        }
+
+        return userRepository.findFirstByNameIgnoreCaseOrFullNameIgnoreCase(tutorName, tutorName)
+                .map(AppUser::getId)
+                .orElse(null);
     }
 
     private SkillSearchResponse toSearchResponse(Skill skill) {
