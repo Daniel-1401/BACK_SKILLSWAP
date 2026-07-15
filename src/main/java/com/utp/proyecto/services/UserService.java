@@ -3,6 +3,7 @@ package com.utp.proyecto.services;
 import com.utp.proyecto.dto.AddUserSkillRequest;
 import com.utp.proyecto.dto.PagedResponse;
 import com.utp.proyecto.dto.UpdateProfileRequest;
+import com.utp.proyecto.dto.UpdateUserSkillRequest;
 import com.utp.proyecto.dto.UserProfileResponse;
 import com.utp.proyecto.dto.UserSkillMutationResponse;
 import com.utp.proyecto.dto.UserSkillResponse;
@@ -15,6 +16,7 @@ import com.utp.proyecto.repositories.AppUserRepository;
 import com.utp.proyecto.repositories.SkillRepository;
 import com.utp.proyecto.repositories.UserSkillRepository;
 import com.utp.proyecto.security.CurrentUserService;
+import com.utp.proyecto.security.PasswordHasher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,21 +29,24 @@ public class UserService {
     private final UserSkillRepository userSkillRepository;
     private final SkillRepository skillRepository;
     private final CurrentUserService currentUserService;
+    private final PasswordHasher passwordHasher;
 
     public UserService(
             AppUserRepository userRepository,
             UserSkillRepository userSkillRepository,
             SkillRepository skillRepository,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            PasswordHasher passwordHasher
     ) {
         this.userRepository = userRepository;
         this.userSkillRepository = userSkillRepository;
         this.skillRepository = skillRepository;
         this.currentUserService = currentUserService;
+        this.passwordHasher = passwordHasher;
     }
 
     public PagedResponse<UserProfileResponse> listUsers(String q, Long categoryId, String mode, int page, int pageSize) {
-        Long currentUserId = currentUserService.getCurrentUserId();
+        Long currentUserId = currentUserService.getCurrentUserIdOrNull();
         List<AppUser> users = userRepository.findAll().stream()
                 .filter(user -> !user.getId().equals(currentUserId))
                 .filter(user -> matchesText(user, q))
@@ -64,7 +69,7 @@ public class UserService {
     }
 
     public UserProfileResponse getCurrentProfile() {
-        return toProfileResponse(currentUserService.getCurrentUser());
+        return toProfileResponse(currentUserService.getCurrentUser(), true);
     }
 
     public UserProfileResponse updateCurrentProfile(UpdateProfileRequest request) {
@@ -84,8 +89,28 @@ public class UserService {
         if (request.avatarUrl() != null) {
             user.setAvatarUrl(request.avatarUrl());
         }
+        if (request.email() != null && !request.email().isBlank()) {
+            String newEmail = request.email().trim().toLowerCase(Locale.ROOT);
+            if (!newEmail.equalsIgnoreCase(user.getEmail())) {
+                userRepository.findByEmailIgnoreCase(newEmail).ifPresent(existing -> {
+                    if (!existing.getId().equals(user.getId())) {
+                        throw ApiException.badRequest("Ese correo ya esta en uso.");
+                    }
+                });
+                user.setEmail(newEmail);
+            }
+        }
+        if (request.newPassword() != null && !request.newPassword().isBlank()) {
+            if (request.currentPassword() == null || !passwordHasher.matches(request.currentPassword(), user.getPasswordHash())) {
+                throw ApiException.badRequest("La contrasena actual no es correcta.");
+            }
+            if (request.newPassword().length() < 6) {
+                throw ApiException.badRequest("La nueva contrasena debe tener al menos 6 caracteres.");
+            }
+            user.setPasswordHash(passwordHasher.hash(request.newPassword()));
+        }
 
-        return toProfileResponse(userRepository.save(user));
+        return toProfileResponse(userRepository.save(user), true);
     }
 
     public Map<String, List<UserSkillResponse>> getUserSkills(Long userId) {
@@ -110,6 +135,28 @@ public class UserService {
         userSkill.setType(type);
         userSkill.setDetail(request.detail() == null ? skill.getDescription() : request.detail());
         userSkill.setLevel(request.level() == null ? "basic" : request.level());
+        userSkill.setImageUrl(request.imageUrl() == null || request.imageUrl().isBlank() ? null : request.imageUrl().trim());
+
+        return toMutationResponse(userSkillRepository.save(userSkill));
+    }
+
+    public UserSkillMutationResponse updateSkillForCurrentUser(Long userSkillId, UpdateUserSkillRequest request) {
+        UserSkill userSkill = userSkillRepository.findById(userSkillId)
+                .orElseThrow(() -> ApiException.notFound("Habilidad de usuario no encontrada."));
+
+        if (!userSkill.getUser().getId().equals(currentUserService.getCurrentUserId())) {
+            throw ApiException.forbidden("No puedes editar habilidades de otro usuario.");
+        }
+
+        if (request.detail() != null) {
+            userSkill.setDetail(request.detail());
+        }
+        if (request.level() != null) {
+            userSkill.setLevel(request.level());
+        }
+        if (request.imageUrl() != null) {
+            userSkill.setImageUrl(request.imageUrl().isBlank() ? null : request.imageUrl().trim());
+        }
 
         return toMutationResponse(userSkillRepository.save(userSkill));
     }
@@ -126,10 +173,15 @@ public class UserService {
     }
 
     public UserProfileResponse toProfileResponse(AppUser user) {
+        return toProfileResponse(user, false);
+    }
+
+    private UserProfileResponse toProfileResponse(AppUser user, boolean includeEmail) {
         return new UserProfileResponse(
                 user.getId(),
                 user.getName(),
                 user.getFullName(),
+                includeEmail ? user.getEmail() : null,
                 user.getRating(),
                 user.getExchanges(),
                 user.getAvatarUrl(),
@@ -180,10 +232,12 @@ public class UserService {
         return userSkills.stream()
                 .map(userSkill -> new UserSkillResponse(
                         userSkill.getSkill().getId(),
+                        userSkill.getId(),
                         userSkill.getSkill().getName(),
                         userSkill.getDetail(),
                         userSkill.getSkill().getCategory() == null ? null : userSkill.getSkill().getCategory().getId(),
-                        userSkill.getLevel()
+                        userSkill.getLevel(),
+                        userSkill.getImageUrl()
                 ))
                 .toList();
     }
@@ -194,7 +248,8 @@ public class UserService {
                 userSkill.getSkill().getId(),
                 userSkill.getSkill().getName(),
                 userSkill.getDetail(),
-                userSkill.getLevel()
+                userSkill.getLevel(),
+                userSkill.getImageUrl()
         );
     }
 }

@@ -24,6 +24,11 @@ public class CurrentUserService {
         throw ApiException.unauthorized("Usuario no autenticado.");
     }
 
+    public Long getCurrentUserIdOrNull() {
+        Object value = request.getAttribute(AuthInterceptor.CURRENT_USER_ID);
+        return value instanceof Long userId ? userId : null;
+    }
+
     public AppUser getCurrentUser() {
         return userRepository.findById(getCurrentUserId())
                 .orElseThrow(() -> ApiException.unauthorized("Usuario no autenticado."));

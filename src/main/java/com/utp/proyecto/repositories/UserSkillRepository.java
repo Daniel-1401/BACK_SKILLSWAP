@@ -11,4 +11,5 @@ import java.util.List;
 public interface UserSkillRepository extends JpaRepository<UserSkill, Long> {
     List<UserSkill> findByUserId(Long userId);
     List<UserSkill> findByUserIdAndType(Long userId, UserSkillType type);
+    List<UserSkill> findByType(UserSkillType type);
 }

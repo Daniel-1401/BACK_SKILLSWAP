@@ -24,14 +24,29 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/v1/api-docs",
                         "/api/v1/api-docs/**",
                         "/api/v1/swagger-ui.html",
-                        "/api/v1/swagger-ui/**"
+                        "/api/v1/swagger-ui/**",
+                        "/api/v1/skills/featured",
+                        "/api/v1/skills",
+                        "/api/v1/catalog/categories",
+                        "/api/v1/catalog/modalities",
+                        "/api/v1/users",
+                        "/api/v1/plans",
+                        "/api/v1/courses",
+                        "/api/v1/courses/*",
+                        "/api/v1/challenges",
+                        "/api/v1/certifications/verify/*"
                 );
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:4200", "http://127.0.0.1:4200")
+                .allowedOrigins(
+                        "http://localhost:4200",
+                        "http://127.0.0.1:4200",
+                        "https://skill-swap.digital",
+                        "https://www.skill-swap.digital"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(false);

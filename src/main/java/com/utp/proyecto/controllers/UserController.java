@@ -4,6 +4,7 @@ import com.utp.proyecto.dto.AddUserSkillRequest;
 import com.utp.proyecto.dto.PagedResponse;
 import com.utp.proyecto.dto.ReviewResponse;
 import com.utp.proyecto.dto.UpdateProfileRequest;
+import com.utp.proyecto.dto.UpdateUserSkillRequest;
 import com.utp.proyecto.dto.UserProfileResponse;
 import com.utp.proyecto.dto.UserSkillMutationResponse;
 import com.utp.proyecto.dto.UserSkillResponse;
@@ -65,6 +66,11 @@ public class UserController {
     @PostMapping("/me/skills/wants")
     public ResponseEntity<UserSkillMutationResponse> addWantsSkill(@RequestBody AddUserSkillRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.addSkillToCurrentUser(request, UserSkillType.WANTS));
+    }
+
+    @PutMapping("/me/skills/{id}")
+    public UserSkillMutationResponse updateSkill(@PathVariable Long id, @RequestBody UpdateUserSkillRequest request) {
+        return userService.updateSkillForCurrentUser(id, request);
     }
 
     @DeleteMapping("/me/skills/{id}")

@@ -1,6 +1,7 @@
 package com.utp.proyecto.controllers;
 
 import com.utp.proyecto.dto.ConversationResponse;
+import com.utp.proyecto.dto.CreateConversationRequest;
 import com.utp.proyecto.dto.CreateMessageRequest;
 import com.utp.proyecto.dto.MessageResponse;
 import com.utp.proyecto.services.ConversationService;
@@ -27,6 +28,11 @@ public class ConversationController {
     @GetMapping
     public List<ConversationResponse> list() {
         return service.list();
+    }
+
+    @PostMapping
+    public ResponseEntity<ConversationResponse> createOrGet(@RequestBody CreateConversationRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createOrGet(request));
     }
 
     @GetMapping("/{id}/messages")

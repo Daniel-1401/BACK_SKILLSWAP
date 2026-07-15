@@ -1,12 +1,14 @@
 package com.utp.proyecto.services;
 
 import com.utp.proyecto.dto.ConversationResponse;
+import com.utp.proyecto.dto.CreateConversationRequest;
 import com.utp.proyecto.dto.CreateMessageRequest;
 import com.utp.proyecto.dto.MessageResponse;
 import com.utp.proyecto.exceptions.ApiException;
 import com.utp.proyecto.models.AppUser;
 import com.utp.proyecto.models.Conversation;
 import com.utp.proyecto.models.Message;
+import com.utp.proyecto.repositories.AppUserRepository;
 import com.utp.proyecto.repositories.ConversationRepository;
 import com.utp.proyecto.repositories.MessageRepository;
 import com.utp.proyecto.security.CurrentUserService;
@@ -19,16 +21,36 @@ import java.util.List;
 public class ConversationService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
+    private final AppUserRepository userRepository;
     private final CurrentUserService currentUserService;
 
     public ConversationService(
             ConversationRepository conversationRepository,
             MessageRepository messageRepository,
+            AppUserRepository userRepository,
             CurrentUserService currentUserService
     ) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
         this.currentUserService = currentUserService;
+    }
+
+    public ConversationResponse createOrGet(CreateConversationRequest request) {
+        Long currentUserId = currentUserService.getCurrentUserId();
+        if (currentUserId.equals(request.participantId())) {
+            throw ApiException.badRequest("No puedes iniciar una conversación contigo mismo.");
+        }
+        return conversationRepository.findBetweenUsers(currentUserId, request.participantId())
+                .map(c -> toConversationResponse(c, currentUserId))
+                .orElseGet(() -> {
+                    AppUser other = userRepository.findById(request.participantId())
+                            .orElseThrow(() -> ApiException.notFound("Usuario no encontrado."));
+                    Conversation conv = new Conversation();
+                    conv.setParticipantOne(currentUserService.getCurrentUser());
+                    conv.setParticipantTwo(other);
+                    return toConversationResponse(conversationRepository.save(conv), currentUserId);
+                });
     }
 
     public List<ConversationResponse> list() {

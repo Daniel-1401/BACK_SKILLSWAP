@@ -6,6 +6,7 @@ public record UserProfileResponse(
         Long id,
         String name,
         String fullName,
+        String email,
         double rating,
         int exchanges,
         String avatarUrl,

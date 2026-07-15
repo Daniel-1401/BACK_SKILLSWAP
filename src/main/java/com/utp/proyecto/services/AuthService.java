@@ -83,7 +83,7 @@ public class AuthService {
     }
 
     private AuthUserResponse toAuthUser(AppUser user) {
-        return new AuthUserResponse(user.getId(), user.getName(), user.getEmail(), user.getCredits());
+        return new AuthUserResponse(user.getId(), user.getName(), user.getEmail(), user.getCredits(), user.getAvatarUrl());
     }
 
     private String defaultAvatarUrl(String name, String fullName, String avatarUrl) {

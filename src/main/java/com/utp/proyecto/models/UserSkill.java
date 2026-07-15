@@ -41,6 +41,9 @@ public class UserSkill {
     @Column(nullable = false)
     private String level;
 
+    @Column(name = "image_url", length = 1000)
+    private String imageUrl;
+
     public Long getId() { return id; }
 
     public AppUser getUser() { return user; }
@@ -57,4 +60,7 @@ public class UserSkill {
 
     public String getLevel() { return level; }
     public void setLevel(String level) { this.level = level; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }
